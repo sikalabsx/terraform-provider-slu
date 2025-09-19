@@ -1,0 +1,6 @@
+keycloak_url = "xxx"
+keycloak_admin_username = "xxx"
+keycloak_admin_password = "xxx"
+realm_id = "xxx"
+org_id = "xxx"
+username = "xxx"

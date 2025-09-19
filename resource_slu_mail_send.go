@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/sikalabs/slu/utils/mail_utils"
 )
 
@@ -29,39 +31,43 @@ func resourceSluMailSend() *schema.Resource {
 			},
 		},
 
-		Create: resourceSluMailSendCreate,
-		Read:   resourceSluMailSendRead,
-		Update: resourceSluMailSendUpdate,
-		Delete: resourceSluMailSendDelete,
+		CreateContext: resourceSluMailSendCreate,
+		ReadContext:   resourceSluMailSendRead,
+		UpdateContext: resourceSluMailSendUpdate,
+		DeleteContext: resourceSluMailSendDelete,
 	}
 }
 
-func resourceSluMailSendCreate(d *schema.ResourceData, m interface{}) error {
+func resourceSluMailSendCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	cfg := m.(*Config)
+
 	err := mail_utils.SendSimpleMail(
-		m.(*Config).SmtpHost,
-		strconv.Itoa(m.(*Config).SmtpPort),
-		m.(*Config).SmtpUser,
-		m.(*Config).SmtpPassword,
+		cfg.SmtpHost,
+		strconv.Itoa(cfg.SmtpPort),
+		cfg.SmtpUser,
+		cfg.SmtpPassword,
 		d.Get("from").(string),
 		d.Get("to").(string),
 		d.Get("subject").(string),
 		d.Get("message").(string),
 	)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
+
 	d.SetId(uuid.New().String())
 	return nil
 }
 
-func resourceSluMailSendRead(d *schema.ResourceData, m interface{}) error {
+func resourceSluMailSendRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceSluMailSendUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceSluMailSendUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceSluMailSendDelete(d *schema.ResourceData, m interface{}) error {
+func resourceSluMailSendDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.SetId("")
 	return nil
 }

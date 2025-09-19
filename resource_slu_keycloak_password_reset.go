@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
+
 	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/sikalabs/slu/pkg/utils/keycloak_utils"
 )
 
@@ -24,32 +28,38 @@ func resourceSluKeycloakPasswordReset() *schema.Resource {
 			},
 		},
 
-		Create: resourceSluKeycloakPasswordResetCreate,
-		Update: resourceSluKeycloakPasswordResetCreate,
-		Read: func(d *schema.ResourceData, m interface{}) error {
-			// This resource does not need to be read, as it is a one-time operation.
+		CreateContext: resourceSluKeycloakPasswordResetCreate,
+		UpdateContext: resourceSluKeycloakPasswordResetCreate,
+
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			// One-time operation; nothing to read
 			return nil
 		},
-		Delete: func(d *schema.ResourceData, m interface{}) error {
-			// This resource does not need to be deleted, as it is a one-time operation.
+		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			// One-time operation; nothing to delete
 			return nil
 		},
 	}
 }
 
-func resourceSluKeycloakPasswordResetCreate(d *schema.ResourceData, m interface{}) error {
-	err := keycloak_utils.PasswordReset(
-		m.(*Config).KeycloakUrl,
-		m.(*Config).KeycloakAdminUsername,
-		m.(*Config).KeycloakAdminPassword,
-		d.Get("realm").(string),
-		d.Get("username").(string),
-		d.Get("new_password").(string),
-	)
-	if err != nil {
-		return err
+func resourceSluKeycloakPasswordResetCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	cfg := m.(*Config)
+
+	realm := d.Get("realm").(string)
+	username := d.Get("username").(string)
+	newPassword := d.Get("new_password").(string)
+
+	if err := keycloak_utils.PasswordReset(
+		cfg.KeycloakUrl,
+		cfg.KeycloakAdminUsername,
+		cfg.KeycloakAdminPassword,
+		realm,
+		username,
+		newPassword,
+	); err != nil {
+		return diag.FromErr(err)
 	}
 
-	d.SetId(uuid.New().String())
+	d.SetId(uuid.NewString())
 	return nil
 }

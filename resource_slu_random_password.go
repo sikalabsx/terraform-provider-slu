@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
+
 	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/sikalabs/slu/utils/random_utils"
 )
 
@@ -16,26 +20,27 @@ func resourceSluRandomPassword() *schema.Resource {
 			},
 		},
 
-		Create: resourceSluRandomPasswordCreate,
-		Read:   resourceSluRandomPasswordRead,
-		Delete: resourceSluRandomPasswordDelete,
+		CreateContext: resourceSluRandomPasswordCreate,
+		ReadContext:   resourceSluRandomPasswordRead,
+		DeleteContext: resourceSluRandomPasswordDelete,
 	}
 }
 
-func resourceSluRandomPasswordCreate(d *schema.ResourceData, m interface{}) error {
+func resourceSluRandomPasswordCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	password, err := random_utils.RandomPassword()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	d.SetId(uuid.New().String())
-	d.Set("result", password)
+	d.SetId(uuid.NewString())
+	_ = d.Set("result", password)
 	return nil
 }
 
-func resourceSluRandomPasswordRead(d *schema.ResourceData, m interface{}) error {
+func resourceSluRandomPasswordRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceSluRandomPasswordDelete(d *schema.ResourceData, m interface{}) error {
+func resourceSluRandomPasswordDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.SetId("")
 	return nil
 }
